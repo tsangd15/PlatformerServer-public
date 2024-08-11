@@ -1,13 +1,14 @@
 """Main Module"""
-import socket
-import threading
 import datetime
 import json
 import random
-from regex import match_addentry, match_get10
-from db_handler import add_entry, get_top
+import socket
+import threading
 from queue import Queue
 from time import sleep
+
+from db_handler import add_entry, get_top
+from regex import match_addentry, match_get10
 
 
 def log(message):
@@ -130,8 +131,7 @@ def get_results(identifier):
         if identifier in task_results:
             thread_identifiers.remove(identifier)  # release ID
             return task_results.pop(identifier)
-        else:
-            sleep(2)  # wait 2 seconds before retrying
+        sleep(2)  # wait 2 seconds before retrying
     return None
 
 
