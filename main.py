@@ -29,15 +29,14 @@ def send(sock, msg):
 
 
 def receive(sock):
-    with sock:
-        # receive and decode header (containing payload size)
-        header = sock.recv(HEADER_SIZE).decode(ENCODING)
+    # receive and decode header (containing payload size)
+    header = sock.recv(HEADER_SIZE).decode(ENCODING)
 
-        if header != "":
-            payload_size = int(header)
+    if header != "":
+        payload_size = int(header)
 
-            # receive and decode payload
-            payload = sock.recv(payload_size).decode(ENCODING)
+        # receive and decode payload
+        payload = sock.recv(payload_size).decode(ENCODING)
 
     return payload
 
