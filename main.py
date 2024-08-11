@@ -56,8 +56,9 @@ def receive(sock):
     # receive and decode header (containing payload size)
     try:
         header = sock.recv(HEADER_SIZE).decode(ENCODING)
-    except ConnectionResetError as e:
-        log(f"{e}")
+    # catch connection reset, aborted & refused errors
+    except ConnectionError as e:
+        log(f"{e}")  # print exception message to console
         return None
 
     if header != "":
