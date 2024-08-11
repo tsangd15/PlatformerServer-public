@@ -45,6 +45,9 @@ def receive(sock):
 
         # receive and decode payload
         payload = sock.recv(payload_size).decode(ENCODING)
+    else:
+        log("Receive timed out.")
+        payload = None
 
     return payload
 
@@ -54,7 +57,7 @@ def handle_client(client_socket, client_addr):
     with client_socket as conn:
         log(f"payload from {client_addr}: '{receive(client_socket)}'")
 
-        conn.send("affirmative".encode(ENCODING))
+        send(conn, "affirmative")
 
         # close both halves of connection
         conn.shutdown(socket.SHUT_RDWR)

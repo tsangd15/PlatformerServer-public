@@ -1,6 +1,44 @@
 import socket
 import time
 
+
+def send(sock, data):
+    """Send data using the given socket.
+    A fixed size header containing the size of the data (payload) will be sent
+    first so the receiver knows how big the data is.
+    The actual data (payload) will be sent afterwards."""
+    payload = data.encode(ENCODING)  # encode into byte representation
+    payload_size = len(payload)  # get length of payload
+
+    # create header
+    header = str(payload_size).encode(ENCODING)
+    # pad header so its length is the fixed header size (32)
+    header += b" " * (HEADER_SIZE - len(header))
+
+    # send header containing payload size then payload
+    sock.send(header)
+    sock.send(payload)
+
+
+def receive(sock):
+    """Receive data using the given socket.
+    A fixed size header will be received first in order to know the size to
+    receive the actual payload (which varies in size).
+    The payload is returned."""
+    # receive and decode header (containing payload size)
+    header = sock.recv(HEADER_SIZE).decode(ENCODING)
+
+    if header != "":
+        payload_size = int(header)
+
+        # receive and decode payload
+        payload = sock.recv(payload_size).decode(ENCODING)
+    else:
+        payload = None
+
+    return payload
+
+
 HEADER_SIZE = 32
 # specify ip to connect to
 IP = "127.0.0.1"
@@ -14,21 +52,6 @@ ENCODING = "utf-8"
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(SERVER_ADDR)
 
-
-def send(msg):
-    payload = msg.encode(ENCODING)  # encode into byte representation
-    payload_size = len(payload)  # get length of payload
-
-    # create header
-    header = str(payload_size).encode(ENCODING)
-    # pad header so its length is the fixed header size (32)
-    header += b" " * (HEADER_SIZE - len(header))
-
-    # send header containing payload size then payload
-    client_socket.send(header)
-    client_socket.send(payload)
-    print(client_socket.recv(2048))
-
-
 time.sleep(5)
-send("123645dcfhdtwetioewh")
+send(client_socket, "123645dcfhdtwetioewh")
+print(receive(client_socket))
