@@ -69,9 +69,9 @@ def add_entry_input_validation(tag, score):
         print("add_entry: tag not 3 characters long")
     elif score < 0:
         print(f"add_entry: invalid score, {score}")
-    elif not(tag.isupper()):
+    elif not tag.isupper():
         print(f"add_entry: tag isn't 100% uppercase, tag={tag}")
-    elif not(tag.isalpha()):
+    elif not tag.isalpha():
         print(f"add_entry: tag characters not letters, tag={tag}")
     else:
         return True

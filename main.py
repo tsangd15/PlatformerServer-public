@@ -18,7 +18,7 @@ def log(message):
 
 def log_connections():
     """Print active connections log message."""
-    log(f"ACTIVE CONNECTIONS: {threading.active_count() - initial_threads}")
+    log(f"ACTIVE CONNECTIONS: {threading.active_count() - INITIAL_THREADS}")
 
 
 def send(sock, data):
@@ -43,8 +43,8 @@ def send(sock, data):
         sock.send(payload)
         return True
     # catch connection reset, aborted & refused errors
-    except ConnectionError as e:
-        log(f"{e}")  # print exception message to console
+    except ConnectionError as err:
+        log(f"{err}")  # print exception message to console
     return False
 
 
@@ -57,8 +57,8 @@ def receive(sock):
     try:
         header = sock.recv(HEADER_SIZE).decode(ENCODING)
     # catch connection reset, aborted & refused errors
-    except ConnectionError as e:
-        log(f"{e}")  # print exception message to console
+    except ConnectionError as err:
+        log(f"{err}")  # print exception message to console
         return None
 
     if header != "":
@@ -74,6 +74,8 @@ def receive(sock):
 
 
 def match(expression):
+    """Match input request to command and execute, returns results if matched.
+    Otherwise returns None."""
     if match_addentry(expression):
         # remove command and parentheses from expression
         expression = expression.replace("ADD_ENTRY (", "").replace(")", "")
@@ -84,7 +86,7 @@ def match(expression):
         # returns true if ran, false if input validation error
         return str(add_entry(tag, score))
 
-    elif match_get10(expression):
+    if match_get10(expression):
         # remove command and parentheses from expression
         expression = expression.replace("GET_ENTRIES (", "").replace(")", "")
         quantity = int(expression)
@@ -96,15 +98,14 @@ def match(expression):
         return json.dumps(results)
 
     # no command match
-    else:
-        return None
+    return None
 
 
-def handle_client(client_socket, client_addr, identifier):
+def handle_client(client_sock, client_ip, identifier):
     """Function for individual thread to run to handle each connection."""
-    with client_socket as conn:
-        payload = receive(client_socket)
-        log(f"payload from {client_addr}: '{payload}'")
+    with client_sock as conn:
+        payload = receive(client_sock)
+        log(f"payload from {client_ip}: '{payload}'")
 
         # enqueue database task
         db_queue.put((identifier, payload))
@@ -123,7 +124,7 @@ def handle_client(client_socket, client_addr, identifier):
         # close both halves of connection
         conn.shutdown(socket.SHUT_RDWR)
 
-    log(f"CLOSED CONNECTION: {client_addr}, sent={sent}")
+    log(f"CLOSED CONNECTION: {client_ip}, sent={sent}")
 
 
 def generate_id():
@@ -185,7 +186,7 @@ db_thread = threading.Thread(target=handle_db, args=(db_queue,))
 db_thread.start()
 
 # store initial threads (no connection threads)
-initial_threads = threading.active_count()
+INITIAL_THREADS = threading.active_count()
 
 while True:
     log_connections()
