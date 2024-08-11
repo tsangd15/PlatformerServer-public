@@ -115,7 +115,7 @@ def handle_client(client_socket, client_addr, identifier):
     log(f"CLOSED CONNECTION: {client_addr}")
 
 
-def generate_id(thread_identifiers):
+def generate_id():
     """Generate a unique identifier for a thread."""
     while True:
         number = random.randint(1, 50)
@@ -182,7 +182,7 @@ while True:
     client_socket, client_addr = server_socket.accept()
     log(f"NEW CONNECTION: {client_addr}")
 
-    thread_id = generate_id(thread_identifiers)
+    thread_id = generate_id()
     # create thread for client
     thread = threading.Thread(target=handle_client, args=(client_socket,
                                                           client_addr,
