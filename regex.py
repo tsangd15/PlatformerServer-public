@@ -3,7 +3,7 @@ import re
 # raw regex expression: ^ADD_ENTRY \([A-Z][A-Z][A-Z], [0-9]+\)$
 
 pattern_addentry = re.compile("^ADD_ENTRY \\([A-Z][A-Z][A-Z], [0-9]+\\)$")
-pattern_get10 = re.compile("^GET_ENTRIES 10$")
+pattern_get10 = re.compile("^GET_ENTRIES \\(10\\)$")
 
 
 def match_addentry(expression):
