@@ -30,21 +30,25 @@ def add_entry(tag, score):
     """Add an entry into the leaderboard table."""
     # input validation
     if not(isinstance(tag, str) and isinstance(score, int)):
-        raise Exception(f"add_entry: typeerror - tag={type(tag)}, " +
-                        f"score={type(score)}")
+        print(f"add_entry: typeerror - tag={type(tag)}, " +
+              f"score={type(score)}")
     elif len(tag) != 3:
-        raise Exception("add_entry: tag not 3 characters long")
+        print("add_entry: tag not 3 characters long")
     elif score < 0:
-        raise Exception(f"add_entry: invalid score, {score}")
+        print(f"add_entry: invalid score, {score}")
     elif not(tag.isupper()):
-        raise Exception(f"add_entry: tag isn't 100% uppercase, tag={tag}")
+        print(f"add_entry: tag isn't 100% uppercase, tag={tag}")
     elif not(tag.isalpha()):
-        raise Exception(f"add_entry: tag characters not letters, tag={tag}")
+        print(f"add_entry: tag characters not letters, tag={tag}")
 
-    conn = connect("data")
+    else:
+        conn = connect("data")
 
-    with conn:
-        conn.execute("""INSERT INTO leaderboard (tag, score)
-                     VALUES (?, ?)""", (tag, score))
+        with conn:
+            conn.execute("""INSERT INTO leaderboard (tag, score)
+                        VALUES (?, ?)""", (tag, score))
 
-    conn.close()
+        conn.close()
+        return True
+
+    return False
