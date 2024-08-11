@@ -3,8 +3,11 @@ import socket
 import threading
 import datetime
 import json
+import random
 from regex import match_addentry, match_get10
 from db_handler import add_entry, get_top
+from queue import Queue
+from time import sleep
 
 
 def log(message):
@@ -86,14 +89,17 @@ def match(expression):
         return None
 
 
-def handle_client(client_socket, client_addr):
+def handle_client(client_socket, client_addr, identifier):
     """Function for individual thread to run to handle each connection."""
     with client_socket as conn:
         payload = receive(client_socket)
         log(f"payload from {client_addr}: '{payload}'")
 
-        # response == None if invalid command
-        response = match(payload)
+        # enqueue database task
+        db_queue.put((identifier, payload))
+
+        # retrieve db task results
+        response = get_results(identifier)
 
         # if valid command received, response != None
         if response is not None:
@@ -106,6 +112,38 @@ def handle_client(client_socket, client_addr):
         conn.shutdown(socket.SHUT_RDWR)
 
     log(f"CLOSED CONNECTION: {client_addr}")
+
+
+def generate_id(thread_identifiers):
+    """Generate a unique identifier for a thread."""
+    while True:
+        number = random.randint(1, 50)
+        if number not in thread_identifiers:
+            thread_identifiers.append(number)
+            return number
+
+
+def get_results(identifier):
+    """Return the database task's results.
+    The function will try 10 attempts if the task hasn't been completed yet."""
+    for _ in range(10):  # counter variable not used so it's named underscore
+        if identifier in task_results:
+            thread_identifiers.remove(identifier)  # release ID
+            return task_results.pop(identifier)
+        else:
+            sleep(2)  # wait 2 seconds before retrying
+    return None
+
+
+def handle_db(queue):
+    """Function to handle the tasks in the database task queue.
+    This function should run as its own independent thread."""
+    while True:
+        log(f"db_worker: Queue Size = {queue.qsize()}")
+        conn_identifier, conn_payload = queue.get()  # blocking line
+        log(f"db_worker: Processing {conn_identifier} // {conn_payload}")
+        results = match(conn_payload)
+        task_results[conn_identifier] = results
 
 
 HEADER_SIZE = 32
@@ -122,22 +160,32 @@ server_socket.bind(SERVER_ADDR)
 # listen on bound port
 server_socket.listen(5)  # backlog 5 connections
 
-# connection established
-# fixed size prep header contains payload size
-# payload (actual data) sent afterwards
+# initialise database task firstin-firstout queue
+db_queue = Queue(maxsize=15)  # cap queue to 15 tasks
+
+# list of currently unavailable thread ids
+thread_identifiers = []
+
+# dictionary of database task results
+task_results = {}
+
+# create and start database handling thread which runs the handle_db function
+db_thread = threading.Thread(target=handle_db, args=(db_queue,))
+db_thread.start()
 
 # store initial threads (no connection threads)
 initial_threads = threading.active_count()
 
 while True:
-    log("Listening...")
     log_connections()
     # establish connection with client
     client_socket, client_addr = server_socket.accept()
     log(f"NEW CONNECTION: {client_addr}")
 
+    thread_id = generate_id(thread_identifiers)
     # create thread for client
     thread = threading.Thread(target=handle_client, args=(client_socket,
-                                                          client_addr))
+                                                          client_addr,
+                                                          thread_id))
 
     thread.start()
