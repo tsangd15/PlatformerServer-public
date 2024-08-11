@@ -1,7 +1,6 @@
 """Main Module"""
 import socket
 import threading
-import time
 import datetime
 
 
@@ -15,33 +14,43 @@ def log_connections():
     log(f"ACTIVE CONNECTIONS: {threading.active_count() - initial_threads}")
 
 
+def send(sock, msg):
+    payload = msg.encode(ENCODING)  # encode into byte representation
+    payload_size = len(payload)  # get length of payload
+
+    # create header
+    header = str(payload_size).encode(ENCODING)
+    # pad header so its length is the fixed header size (32)
+    header += b" " * (HEADER_SIZE - len(header))
+
+    # send header containing payload size then payload
+    sock.send(header)
+    sock.send(payload)
+
+
+def receive(sock):
+    with sock:
+        # receive and decode header (containing payload size)
+        header = sock.recv(HEADER_SIZE).decode(ENCODING)
+
+        if header != "":
+            payload_size = int(header)
+
+            # receive and decode payload
+            payload = sock.recv(payload_size).decode(ENCODING)
+
+    return payload
+
+
 def handle_client(client_socket, client_addr):
     """Function for individual thread to run to handle each connection."""
     with client_socket as conn:
-        iterations = 0
-        while True:
-            iterations += 1
-            if iterations > 20:
-                break
-            # receive and decode header (payload size)
-            payload_size = conn.recv(HEADER_SIZE).decode(ENCODING)
-            log(f"incoming payload size={payload_size}")
-            # log(f"{client_addr} payload size: '{payload_size}'")
-            if payload_size:  # if not empty
-                payload_size = int(payload_size)  # convert to int
+        log(f"payload from {client_addr}: '{receive(client_socket)}'")
 
-                # receive payload
-                payload = conn.recv(payload_size).decode(ENCODING)
-                log(f"payload from {client_addr}: '{payload}'")
+        conn.send("affirmative".encode(ENCODING))
 
-                client_socket.send("affirmative".encode(ENCODING))
-
-                # close both halves of connection
-                conn.shutdown(socket.SHUT_RDWR)
-                break
-            else:
-                log(f"{client_addr}: iteration, no payload")
-            time.sleep(1)
+        # close both halves of connection
+        conn.shutdown(socket.SHUT_RDWR)
 
     log(f"CLOSED CONNECTION: {client_addr}")
 
