@@ -42,11 +42,39 @@ def add_entry(tag, score):
         print(f"add_entry: tag characters not letters, tag={tag}")
 
     else:
-        conn = connect("data")
+        conn = connect("data")  # connect to database
+        cur = conn.cursor()
 
         with conn:
-            conn.execute("""INSERT INTO leaderboard (tag, score)
-                        VALUES (?, ?)""", (tag, score))
+            # query db for any rows with input tag
+            cur.execute("""SELECT * FROM leaderboard
+                        WHERE tag = ?""", (tag,))
+            # query result is a list of tuples, each tuple is a row
+            # e.g. [("TAG", 45), ("QWE", 67)]
+            existing_row = cur.fetchall()  # save query result in variable
+
+            if existing_row == []:  # tag doesn't exist
+                # insert new row with new tag and score
+                conn.execute("""INSERT INTO leaderboard (tag, score)
+                            VALUES (?, ?)""", (tag, score))
+
+            else:  # fetched results not empty so tag already exists
+
+                # check only 1 row returned
+                if len(existing_row) != 1:
+                    # raise exception as more than 1 row returned
+                    raise Exception("Length of returned rows not 1; " +
+                                    f"existing_row={existing_row}")
+
+                # retrieve old score
+                old_score = existing_row[0][1]
+
+                # check new score bigger than old score
+                # if so update score
+                if score > old_score:
+                    conn.execute("""UPDATE leaderboard
+                                    SET score = ?
+                                    WHERE tag = ?""", (score, tag))
 
         conn.close()
         return True
