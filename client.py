@@ -1,5 +1,5 @@
 import socket
-import time
+import json
 
 
 def send(sock, data):
@@ -52,6 +52,5 @@ ENCODING = "utf-8"
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(SERVER_ADDR)
 
-time.sleep(5)
-send(client_socket, "123645dcfhdtwetioewh")
-print(receive(client_socket))
+send(client_socket, "GET_ENTRIES (10)")
+print(json.loads(receive(client_socket)))
