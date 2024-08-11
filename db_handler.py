@@ -28,6 +28,19 @@ def get_top(quantity):
 
 def add_entry(tag, score):
     """Add an entry into the leaderboard table."""
+    # input validation
+    if not(isinstance(tag, str) and isinstance(score, int)):
+        raise Exception(f"add_entry: typeerror - tag={type(tag)}, " +
+                        f"score={type(score)}")
+    elif len(tag) != 3:
+        raise Exception("add_entry: tag not 3 characters long")
+    elif score < 0:
+        raise Exception(f"add_entry: invalid score, {score}")
+    elif not(tag.isupper()):
+        raise Exception(f"add_entry: tag isn't 100% uppercase, tag={tag}")
+    elif not(tag.isalpha()):
+        raise Exception(f"add_entry: tag characters not letters, tag={tag}")
+
     conn = connect("data")
 
     with conn:
