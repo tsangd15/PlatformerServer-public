@@ -75,4 +75,3 @@ while True:
                                                           client_addr))
 
     thread.start()
-    # always 1 thread running
