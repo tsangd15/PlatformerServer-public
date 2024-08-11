@@ -14,8 +14,12 @@ def log_connections():
     log(f"ACTIVE CONNECTIONS: {threading.active_count() - initial_threads}")
 
 
-def send(sock, msg):
-    payload = msg.encode(ENCODING)  # encode into byte representation
+def send(sock, data):
+    """Send data using the given socket.
+    A fixed size header containing the size of the data (payload) will be sent
+    first so the receiver knows how big the data is.
+    The actual data (payload) will be sent afterwards."""
+    payload = data.encode(ENCODING)  # encode into byte representation
     payload_size = len(payload)  # get length of payload
 
     # create header
@@ -29,6 +33,10 @@ def send(sock, msg):
 
 
 def receive(sock):
+    """Receive data using the given socket.
+    A fixed size header will be received first in order to know the size to
+    receive the actual payload (which varies in size).
+    The payload is returned."""
     # receive and decode header (containing payload size)
     header = sock.recv(HEADER_SIZE).decode(ENCODING)
 
