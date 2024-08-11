@@ -27,6 +27,10 @@ def log(message):
     print(f"[{datetime.datetime.now()}] >>> {message}")
 
 
+def log_connections():
+    log(f"ACTIVE CONNECTIONS: {threading.active_count() - initial_threads}")
+
+
 def handle_client(client_socket, client_addr):
     with client_socket as conn:
         iterations = 0
@@ -47,14 +51,18 @@ def handle_client(client_socket, client_addr):
                 # close both halves of connection
                 conn.shutdown(socket.SHUT_RDWR)
                 break
+            else:
+                log(f"{client_addr}: iteration, no payload")
             time.sleep(1)
 
     log(f"CLOSED CONNECTION: {client_addr}")
 
 
+initial_threads = threading.active_count()
+
 while True:
     log("Listening...")
-    log(f"ACTIVE CONNECTIONS: {threading.active_count()-1}")
+    log_connections()
     # establish connection with client
     client_socket, client_addr = server_socket.accept()
     log(f"NEW CONNECTION: {client_addr}")
@@ -65,4 +73,3 @@ while True:
 
     thread.start()
     # always 1 thread running
-    log(f"ACTIVE CONNECTIONS: {threading.active_count()-1}")
