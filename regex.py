@@ -1,3 +1,4 @@
+"""Regex Functions Module"""
 import re
 
 # raw regex expression: ^ADD_ENTRY \([A-Z][A-Z][A-Z], [0-9]+\)$

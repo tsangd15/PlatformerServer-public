@@ -1,3 +1,4 @@
+"""Exemplar Client Functions Module"""
 import socket
 import json
 
