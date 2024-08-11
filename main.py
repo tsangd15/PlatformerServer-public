@@ -117,6 +117,7 @@ def handle_client(client_socket, client_addr, identifier):
             log(f"responding with: {response}")
             sent = send(conn, response)
         else:
+            sent = "invalid-request"
             log("invalid command, closing")
 
         # close both halves of connection
