@@ -25,7 +25,9 @@ def send(sock, data):
     """Send data using the given socket.
     A fixed size header containing the size of the data (payload) will be sent
     first so the receiver knows how big the data is.
-    The actual data (payload) will be sent afterwards."""
+    The actual data (payload) will be sent afterwards.
+    The function returns True if it carried out successfully, otherwise False
+    is returned."""
     payload = data.encode(ENCODING)  # encode into byte representation
     payload_size = len(payload)  # get length of payload
 
@@ -34,9 +36,16 @@ def send(sock, data):
     # pad header so its length is the fixed header size (32)
     header += b" " * (HEADER_SIZE - len(header))
 
-    # send header containing payload size then payload
-    sock.send(header)
-    sock.send(payload)
+    # attempt to send data to recipient
+    try:
+        # send header containing payload size then payload
+        sock.send(header)
+        sock.send(payload)
+        return True
+    # catch connection reset, aborted & refused errors
+    except ConnectionError as e:
+        log(f"{e}")  # print exception message to console
+    return False
 
 
 def receive(sock):
@@ -105,14 +114,14 @@ def handle_client(client_socket, client_addr, identifier):
         # if valid command received, response != None
         if response is not None:
             log(f"responding with: {response}")
-            send(conn, response)
+            sent = send(conn, response)
         else:
             log("invalid command, closing")
 
         # close both halves of connection
         conn.shutdown(socket.SHUT_RDWR)
 
-    log(f"CLOSED CONNECTION: {client_addr}")
+    log(f"CLOSED CONNECTION: {client_addr}, sent={sent}")
 
 
 def generate_id():
