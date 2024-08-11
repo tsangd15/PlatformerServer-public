@@ -52,5 +52,7 @@ ENCODING = "utf-8"
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(SERVER_ADDR)
 
+# send(client_socket, "ADD_ENTRY (IJK, 55)")
+# print(receive(client_socket))
 send(client_socket, "GET_ENTRIES (10)")
 print(json.loads(receive(client_socket)))
