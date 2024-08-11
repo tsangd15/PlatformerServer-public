@@ -2,6 +2,9 @@
 import socket
 import threading
 import datetime
+import json
+from regex import match_addentry, match_get10
+from db_handler import add_entry, get_top
 
 
 def log(message):
@@ -38,7 +41,11 @@ def receive(sock):
     receive the actual payload (which varies in size).
     The payload is returned."""
     # receive and decode header (containing payload size)
-    header = sock.recv(HEADER_SIZE).decode(ENCODING)
+    try:
+        header = sock.recv(HEADER_SIZE).decode(ENCODING)
+    except ConnectionResetError as e:
+        log(f"{e}")
+        return None
 
     if header != "":
         payload_size = int(header)
@@ -52,12 +59,48 @@ def receive(sock):
     return payload
 
 
+def match(expression):
+    if match_addentry(expression):
+        # remove command and parentheses from expression
+        expression = expression.replace("ADD_ENTRY (", "").replace(")", "")
+        tag, score = expression.split(", ")
+        score = int(score)
+
+        # carry out add_entry database request
+        # returns true if ran, false if input validation error
+        return str(add_entry(tag, score))
+
+    elif match_get10(expression):
+        # remove command and parentheses from expression
+        expression = expression.replace("GET_ENTRIES (", "").replace(")", "")
+        quantity = int(expression)
+
+        # carry out get_top database request
+        # store results
+        results = get_top(quantity)
+        # return as json
+        return json.dumps(results)
+
+    # no command match
+    else:
+        return None
+
+
 def handle_client(client_socket, client_addr):
     """Function for individual thread to run to handle each connection."""
     with client_socket as conn:
-        log(f"payload from {client_addr}: '{receive(client_socket)}'")
+        payload = receive(client_socket)
+        log(f"payload from {client_addr}: '{payload}'")
 
-        send(conn, "affirmative")
+        # response == None if invalid command
+        response = match(payload)
+
+        # if valid command received, response != None
+        if response is not None:
+            log(f"responding with: {response}")
+            send(conn, response)
+        else:
+            log("invalid command, closing")
 
         # close both halves of connection
         conn.shutdown(socket.SHUT_RDWR)
