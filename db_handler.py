@@ -45,12 +45,6 @@ def add_entry(tag, score):
 
             # otherwise row with that tag exists
             else:
-                # check only 1 row returned
-                if len(existing_row) != 1:
-                    # raise exception as more than 1 row returned
-                    raise Exception("Length of returned rows not 1; " +
-                                    f"existing_row={existing_row}")
-
                 # retrieve old score
                 old_score = existing_row[0][1]
 
