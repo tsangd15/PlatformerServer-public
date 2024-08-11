@@ -1,4 +1,5 @@
 import socket
+import time
 
 HEADER_SIZE = 32
 # specify ip to connect to
@@ -29,4 +30,5 @@ def send(msg):
     print(client_socket.recv(2048))
 
 
+time.sleep(5)
 send("123645dcfhdtwetioewh")
