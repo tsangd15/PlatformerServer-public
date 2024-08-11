@@ -28,19 +28,23 @@ def get_top(quantity):
 
 def add_entry(tag, score):
     """Add an entry into the leaderboard table."""
-    # check if input valid
+    # if input is valid
     if add_entry_input_validation(tag, score):
-        conn = connect("data")  # connect to database
+        # connect to database
+        conn = connect("data")
         cur = conn.cursor()
 
         with conn:
+            # return row with same tag (if it exists)
             existing_row = add_entry_return_rows(cur, tag)
 
-            if existing_row == []:  # tag doesn't exist
+            # if empty, a row with that tag doesn't exist
+            if existing_row == []:
                 # insert new row with new tag and score
                 add_entry_new_row(conn, tag, score)
 
-            else:  # fetched results not empty so tag already exists
+            # otherwise row with that tag exists
+            else:
                 # check only 1 row returned
                 if len(existing_row) != 1:
                     # raise exception as more than 1 row returned
@@ -51,8 +55,8 @@ def add_entry(tag, score):
                 old_score = existing_row[0][1]
 
                 # check new score bigger than old score
-                # if so update score
                 if score > old_score:
+                    # update row with new score
                     add_entry_update_row(conn, tag, score)
 
         conn.close()
