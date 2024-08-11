@@ -40,6 +40,7 @@ def handle_client(client_socket, client_addr):
                 break
             # receive and decode header (payload size)
             payload_size = conn.recv(HEADER_SIZE).decode(ENCODING)
+            log(f"incoming payload size={payload_size}")
             # log(f"{client_addr} payload size: '{payload_size}'")
             if payload_size:  # if not empty
                 payload_size = int(payload_size)  # convert to int
@@ -47,6 +48,8 @@ def handle_client(client_socket, client_addr):
                 # receive payload
                 payload = conn.recv(payload_size).decode(ENCODING)
                 log(f"payload from {client_addr}: '{payload}'")
+
+                client_socket.send("affirmative".encode(ENCODING))
 
                 # close both halves of connection
                 conn.shutdown(socket.SHUT_RDWR)
